@@ -2,6 +2,7 @@ name: .NET build and regression tests
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -9,7 +10,13 @@ permissions:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    name: Build and test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    timeout-minutes: 15
     steps:
       - name: Check out source
         uses: actions/checkout@v4
