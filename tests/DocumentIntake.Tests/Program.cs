@@ -72,7 +72,7 @@ var tests = new (string Name, Action<string> Run)[]
         var rules = Path.Combine(root, "rules.json");
         foreach (var value in new[] { "42", "null", "true", "[]" })
         {
-            File.WriteAllText(rules, "{\\".txt\\":" + value + "}");
+            File.WriteAllText(rules, "{\".txt\":" + value + "}");
             Throws<ArgumentException>(() => Intake.ReadRules(rules));
         }
     }),
