@@ -61,6 +61,26 @@ var tests = new (string Name, Action<string> Run)[]
         Throws<ArgumentException>(()=>Intake.ReadRules(rules));
         var source=Input(root,"a.txt","a");Throws<ArgumentException>(()=>Intake.Plan(source,Path.Combine(root,"output"),new() {[".txt"]=".."}));
     }),
+    ("Duplicate extension rules rejected", root => {
+        var rules = Path.Combine(root, "rules.json");
+        File.WriteAllText(rules, "{\".txt\":\"documents\",\".txt\":\"other\"}");
+        Throws<ArgumentException>(() => Intake.ReadRules(rules));
+        File.WriteAllText(rules, "{\".txt\":\"documents\",\".TXT\":\"other\"}");
+        Throws<ArgumentException>(() => Intake.ReadRules(rules));
+    }),
+    ("Rule categories must be strings", root => {
+        var rules = Path.Combine(root, "rules.json");
+        foreach (var value in new[] { "42", "null", "true", "[]" })
+        {
+            File.WriteAllText(rules, "{\\".txt\\":" + value + "}");
+            Throws<ArgumentException>(() => Intake.ReadRules(rules));
+        }
+    }),
+    ("Rules must be a JSON object", root => {
+        var rules = Path.Combine(root, "rules.json");
+        File.WriteAllText(rules, "[\"documents\"]");
+        Throws<ArgumentException>(() => Intake.ReadRules(rules));
+    }),
     ("Malformed rules rejected", root => {
         var rules=Path.Combine(root,"rules.json");File.WriteAllText(rules,"{");
         Throws<System.Text.Json.JsonException>(()=>Intake.ReadRules(rules));
