@@ -8,7 +8,7 @@ This is an independent personal portfolio project. It does not modify the ITAM t
 
 ## Requirements
 
-.NET 10 SDK. No third-party NuGet packages are required. Validated on macOS ARM64; Windows and Linux runs remain unverified.
+.NET 10 SDK. No third-party NuGet packages are required. Earlier testing used macOS ARM64. On October 31, 2026, GitHub Actions passed the Release build, all 19 tests, and the sample preview on hosted Ubuntu, Windows, and macOS runners. The current version has not been retested on my own Mac.
 
 ## Quick start
 

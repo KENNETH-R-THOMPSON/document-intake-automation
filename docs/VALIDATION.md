@@ -1,5 +1,15 @@
 # Validation
 
+## October 31, 2026: Three operating systems in GitHub Actions
+
+The .NET 10 Release build passed with zero warnings and errors on hosted Ubuntu, Windows, and macOS runners. Each runner completed all 19 executable regression tests and the sample read-only preview. The preview reported two planned files and zero copied files on each system.
+
+[GitHub Actions run with three passing jobs](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/actions/runs/41188592659) | [Pull request #3](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/pull/3)
+
+These are GitHub-hosted tests. They don't verify the latest version on my own Mac, Windows hardware, real document collections, or recovery after disk failures.
+
+## Earlier local checks
+
 Verified September 26, 2026 on macOS ARM64 using .NET SDK 10.0.401.
 
 - Release build: succeeded, zero warnings and zero errors.
