@@ -1,5 +1,7 @@
 # Document Intake Automation
 
+[![.NET 10 CI](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/actions/workflows/dotnet-ci.yml)
+
 A C# command-line utility that sorts copies of incoming files into folders using extension rules. Preview is read-only. Applying a plan copies files, verifies each copy with SHA-256, and never deletes originals or overwrites existing targets.
 
 This is an independent personal portfolio project. It does not modify the ITAM team project or school assignments.
