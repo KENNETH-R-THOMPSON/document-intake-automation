@@ -1,0 +1,32 @@
+name: .NET build and regression tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore tests/DocumentIntake.Tests/DocumentIntake.Tests.csproj
+
+      - name: Build release executable
+        run: dotnet build src/DocumentIntake/DocumentIntake.csproj --configuration Release --no-restore
+
+      - name: Run regression checks
+        run: dotnet run --project tests/DocumentIntake.Tests/DocumentIntake.Tests.csproj --configuration Release --no-restore
+
+      - name: Preview sample intake without writing copies
+        run: dotnet run --project src/DocumentIntake/DocumentIntake.csproj --configuration Release --no-restore -- preview sample/inbox sample-output
