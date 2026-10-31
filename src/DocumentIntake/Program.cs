@@ -17,18 +17,26 @@ public static class Intake
 
     public static Dictionary<string, string> ReadRules(string path)
     {
-        var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path))
-            ?? throw new ArgumentException("The rules file must contain a JSON object.");
+        // Read each property directly so repeated JSON keys cannot silently replace earlier rules.
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        if (document.RootElement.ValueKind != JsonValueKind.Object)
+            throw new ArgumentException("The rules file must contain a JSON object.");
+
         var rules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var pair in parsed)
+        foreach (var property in document.RootElement.EnumerateObject())
         {
-            if (pair.Key.Length < 2 || pair.Key[0] != '.' ||
-                !pair.Key[1..].All(char.IsAsciiLetterOrDigit))
+            var extension = property.Name;
+            if (extension.Length < 2 || extension[0] != '.' ||
+                !extension[1..].All(char.IsAsciiLetterOrDigit))
                 throw new ArgumentException("Rule keys must be simple extensions, such as .pdf.");
-            if (string.IsNullOrWhiteSpace(pair.Value) || pair.Value is "." or ".." ||
-                !pair.Value.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+            if (property.Value.ValueKind != JsonValueKind.String)
+                throw new ArgumentException("Rule categories must be strings.");
+
+            var category = property.Value.GetString()!;
+            if (string.IsNullOrWhiteSpace(category) || category is "." or ".." ||
+                !category.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
                 throw new ArgumentException("Categories must contain only letters, digits, hyphens or underscores.");
-            if (!rules.TryAdd(pair.Key, pair.Value))
+            if (!rules.TryAdd(extension, category))
                 throw new ArgumentException("Duplicate extension rule (case-insensitive).");
         }
         return rules;
