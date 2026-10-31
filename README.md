@@ -28,7 +28,7 @@ Optional rules replace the defaults:
 dotnet run --project src/DocumentIntake -- preview sample/inbox sample-output sample/rules.json
 ```
 
-Rules map extensions to single folder names. Extensions are case-insensitive. Unknown extensions use `other`. Nested source paths remain nested within their category, so equal names in different source folders stay separate.
+Rules map extensions to single folder names. Extensions are case-insensitive. Unknown extensions use `other`. Rules JSON must be an object with string categories; repeated extension keys, including different capitalization, are rejected. Nested source paths remain nested within their category, so equal names in different source folders stay separate.
 
 Output includes mode, planned/copied counts, source/destination paths, byte counts and SHA-256 fingerprints. Exit code 0 means success, 1 means input or filesystem failure, and 2 means incorrect command syntax. Diagnostics go to stderr.
 
@@ -39,7 +39,7 @@ dotnet build src/DocumentIntake -c Release
 dotnet run --project tests/DocumentIntake.Tests -c Release
 ```
 
-The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, invalid rules, missing input, and symbolic links.
+The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, duplicate or invalid JSON rules, missing input, and symbolic links.
 
 ## JetBrains use
 

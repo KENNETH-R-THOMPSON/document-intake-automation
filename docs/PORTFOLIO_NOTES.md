@@ -7,6 +7,8 @@
 
 Use these bullets only after reviewing the code and being able to explain the implementation and your contribution.
 
+- Checked custom JSON rules for duplicate extension keys and invalid category types, with automated regression coverage.
+
 ## Five-minute walkthrough
 
 1. Explain the problem: incoming files need repeatable folder classification.
