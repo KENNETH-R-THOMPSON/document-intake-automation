@@ -8,7 +8,7 @@ This is an independent personal portfolio project. It does not modify the ITAM t
 
 ## Requirements
 
-.NET 10 SDK. No third-party NuGet packages are required. Earlier testing used macOS ARM64. On November 1, 2026, GitHub Actions passed the Release build, all 25 tests, and the fictional preview, apply and exact-verify commands on hosted Ubuntu, Windows and macOS runners. The current version has not been retested on my own Mac.
+.NET 10 SDK. No third-party NuGet packages are required. Earlier testing used macOS ARM64. On November 1, 2026, GitHub Actions passed the Release build, all 27 tests in PR CI, and the fictional preview, apply and exact-verify commands on hosted Ubuntu, Windows and macOS runners. The current version has not been retested on my own Mac.
 
 ## Quick start
 
@@ -22,7 +22,7 @@ dotnet run --project src/DocumentIntake -- verify-exact sample/inbox sample-outp
 dotnet run --project tests/DocumentIntake.Tests
 ```
 
-The sample has two fictional files. Preview prints a JSON plan without creating the destination. Apply creates `sample-output/documents/readme.txt` and `sample-output/data/inventory.csv`. Running apply a second time reports a conflict, preserving those files. Verify checks the existing copies against the current source contents without writing anything. It reports the checked and matched counts, or exits with code 1 if a copy is missing or differs. `verify-exact` also scans the destination for unexpected files, including nested stale copies, and fails if it finds any. Both verification commands are read-only.
+The sample has two fictional files. Preview prints a JSON plan without creating the destination. Apply creates `sample-output/documents/readme.txt` and `sample-output/data/inventory.csv`. Running apply a second time reports a conflict, preserving those files. Verify checks the existing copies against the current source contents without writing anything. It reports the checked and matched counts, or exits with code 1 if a copy is missing or differs. `verify-exact` also scans the destination for unexpected files and directories, including nested stale copies and empty leftover folders, and fails if it finds any. Both verification commands are read-only.
 
 Optional rules replace the defaults:
 
@@ -41,7 +41,7 @@ dotnet build src/DocumentIntake -c Release
 dotnet run --project tests/DocumentIntake.Tests -c Release
 ```
 
-The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, duplicate or invalid JSON rules, missing input, symbolic links, verification of copied files, and exact verification of unexpected destination files.
+The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, duplicate or invalid JSON rules, missing input, symbolic links, verification of copied files, and exact verification of unexpected destination files and empty folders.
 
 ## JetBrains use
 
@@ -56,7 +56,7 @@ Open the project folder in Rider for C# editing and debugging. In IntelliJ IDEA,
 - Work on stable, trusted folders. Checks do not defeat another process maliciously replacing paths between validation and copying.
 - Apply is atomic per file, not for the entire batch. Disk errors can leave earlier verified copies and empty directories. The error explains this; source files remain untouched.
 - Preview, apply, and verify generate separate plans. Apply may include files added after preview; there is no saved-plan approval mechanism.
-- Verify compares destination files against source contents at verification time. Use `verify-exact` to also reject extra destination files. Neither mode proves that a previous backup snapshot is unchanged.
+- Verify compares destination files against source contents at verification time. Use `verify-exact` to also reject extra destination files and directories. Neither mode proves that a previous backup snapshot is unchanged.
 - Classification uses extensions, not file contents. There is no OCR, malware scanning, document authenticity check, or sensitive-data classification.
 - Empty directories, ACLs, extended attributes and timestamps are not preserved. Special filesystem objects such as FIFOs are outside the supported regular-file input scope.
 - Source/destination ancestry comparison is conservatively case-insensitive. This can reject paths that are distinct on a case-sensitive filesystem.
