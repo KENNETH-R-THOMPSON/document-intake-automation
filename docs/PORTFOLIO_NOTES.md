@@ -11,7 +11,7 @@ Use these bullets only after reviewing the code and being able to explain the im
 
 ## LinkedIn Projects draft (unpublished)
 
-I worked on an AI-assisted C#/.NET 10 command-line project that organizes fictional files into folders. I added read-only copy verification and an optional exact mode that catches unexpected destination files. I wrote tests for changed copies, missing copies and nested extra files. All 25 tests and the sample CLI checks passed on hosted Linux, macOS and Windows. I haven't tested it on my Mac or NAS or used it with private documents.
+I worked on an AI-assisted C#/.NET 10 command-line project that organizes fictional files into folders. I added read-only copy verification and an optional exact mode that catches unexpected destination files and empty folders. I wrote tests for changed copies, missing copies and leftover folders. All 27 tests and sample CLI checks passed in PR CI on hosted Linux, macOS and Windows. I haven't tested it on my Mac or NAS or used it with private documents.
 
 Skills: C#, .NET, SHA-256, JSON, file handling, regression testing, GitHub Actions.
 Public Featured candidate: https://github.com/KENNETH-R-THOMPSON/document-intake-automation . LinkedIn publication remains unverified.
@@ -21,7 +21,7 @@ Public Featured candidate: https://github.com/KENNETH-R-THOMPSON/document-intake
 1. Explain the problem: incoming files need repeatable folder classification.
 2. Run preview on the fictional sample and show that the output folder does not exist.
 3. Run apply and inspect the two categorized copies and unchanged originals.
-4. Run verify to compare the copied files with the current sources. Add a fictional extra destination file and show that verify-exact rejects it without deleting anything.
+4. Run verify to compare the copied files with the current sources. Add a fictional extra destination file or empty folder and show that verify-exact rejects it without deleting anything.
 5. Repeat apply to demonstrate overwrite protection.
 6. Run the test harness. Explain per-file atomic rename, partial batch failure, and why file extensions do not prove document content.
 
