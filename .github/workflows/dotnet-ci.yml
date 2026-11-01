@@ -37,3 +37,9 @@ jobs:
 
       - name: Preview sample intake without writing copies
         run: dotnet run --project src/DocumentIntake/DocumentIntake.csproj --configuration Release --no-restore -- preview sample/inbox sample-output
+
+      - name: Apply fictional sample copies
+        run: dotnet run --project src/DocumentIntake/DocumentIntake.csproj --configuration Release --no-restore -- apply sample/inbox sample-output
+
+      - name: Exact-verify fictional sample copies
+        run: dotnet run --project src/DocumentIntake/DocumentIntake.csproj --configuration Release --no-restore -- verify-exact sample/inbox sample-output
