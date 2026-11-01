@@ -59,7 +59,7 @@ public static class Intake
         }
     }
 
-    private static IEnumerable<string> Scan(string directory)
+    private static IEnumerable<string> Scan(string directory, bool includeDirectories = false)
     {
         foreach (var entry in new DirectoryInfo(directory).EnumerateFileSystemInfos().OrderBy(x => x.Name, StringComparer.Ordinal))
         {
@@ -67,7 +67,8 @@ public static class Intake
                 throw new IOException("Symbolic links and reparse points are not supported: " + entry.FullName);
             if (entry is DirectoryInfo child)
             {
-                foreach (var nested in Scan(child.FullName)) yield return nested;
+                if (includeDirectories) yield return child.FullName;
+                foreach (var nested in Scan(child.FullName, includeDirectories)) yield return nested;
             }
             else yield return entry.FullName;
         }
@@ -130,10 +131,18 @@ public static class Intake
             // A normal verify checks expected copies. Exact mode also rejects stale or unrelated files.
             if (!Directory.Exists(destination))
                 throw new DirectoryNotFoundException("Destination folder does not exist.");
-            var expected = plan.Select(item => item.Destination).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            foreach (var file in Scan(destination))
-                if (!expected.Contains(file))
-                    throw new IOException("Unexpected destination file: " + file);
+            var expectedFiles = plan.Select(item => item.Destination).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var expectedDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in plan)
+            {
+                for (var parent = Path.GetDirectoryName(item.Destination);
+                     parent != null && !parent.Equals(destination, StringComparison.OrdinalIgnoreCase);
+                     parent = Path.GetDirectoryName(parent))
+                    expectedDirectories.Add(parent);
+            }
+            foreach (var entry in Scan(destination, includeDirectories: true))
+                if (!expectedFiles.Contains(entry) && !expectedDirectories.Contains(entry))
+                    throw new IOException("Unexpected destination entry: " + entry);
         }
         return new VerificationResult(exact ? "verify-exact" : "verify", plan.Count, plan.Count);
     }
