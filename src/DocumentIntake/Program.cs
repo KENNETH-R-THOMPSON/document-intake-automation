@@ -5,6 +5,7 @@ namespace DocumentIntake;
 
 public record PlannedFile(string Source, string Destination, string Category, long Bytes, string Sha256);
 public record IntakeResult(string Mode, int Planned, int Copied, IReadOnlyList<PlannedFile> Files);
+public record VerificationResult(string Mode, int Checked, int Matched);
 
 public static class Intake
 {
@@ -78,7 +79,7 @@ public static class Intake
         return Convert.ToHexString(SHA256.HashData(input));
     }
 
-    public static List<PlannedFile> Plan(string source, string destination, Dictionary<string, string>? rules = null)
+    public static List<PlannedFile> Plan(string source, string destination, Dictionary<string, string>? rules = null, bool allowExistingCopies = false)
     {
         source = Path.TrimEndingDirectorySeparator(Path.GetFullPath(source));
         destination = Path.TrimEndingDirectorySeparator(Path.GetFullPath(destination));
@@ -101,7 +102,7 @@ public static class Intake
             var category = normalizedRules.GetValueOrDefault(Path.GetExtension(file), "other");
             var target = Path.Combine(destination, category, Path.GetRelativePath(source, file));
             RejectLinks(target);
-            if (!targets.Add(target) || File.Exists(target) || Directory.Exists(target))
+            if (!targets.Add(target) || Directory.Exists(target) || (!allowExistingCopies && File.Exists(target)))
                 throw new IOException("Destination conflict: " + target);
             // Fail before copying if a regular file blocks a required directory.
             for (var parent = Path.GetDirectoryName(target); parent != null && IsInside(parent, destination); parent = Path.GetDirectoryName(parent))
@@ -109,6 +110,22 @@ public static class Intake
             planned.Add(new PlannedFile(file, target, category, new FileInfo(file).Length, Hash(file)));
         }
         return planned;
+    }
+
+    public static VerificationResult Verify(string source, string destination, Dictionary<string, string>? rules = null)
+    {
+        // Compare copies with the current source files. No files are created or changed.
+        var plan = Plan(source, destination, rules, allowExistingCopies: true);
+        foreach (var item in plan)
+        {
+            RejectLinks(item.Source);
+            RejectLinks(item.Destination);
+            if (!File.Exists(item.Destination))
+                throw new IOException("Missing copied file: " + item.Destination);
+            if (new FileInfo(item.Destination).Length != item.Bytes || Hash(item.Destination) != item.Sha256)
+                throw new IOException("Copied file differs from source: " + item.Destination);
+        }
+        return new VerificationResult("verify", plan.Count, plan.Count);
     }
 
     public static IntakeResult Run(string source, string destination, bool apply, Dictionary<string, string>? rules = null)
@@ -149,19 +166,21 @@ public static class Program
     {
         if (args.Length == 1 && args[0] is "--help" or "-h")
         {
-            Console.WriteLine("DocumentIntake <preview|apply> <source> <destination> [rules.json]");
+            Console.WriteLine("DocumentIntake <preview|apply|verify> <source> <destination> [rules.json]");
             Console.WriteLine("Preview makes no changes. Apply copies files and never deletes originals or overwrites targets.");
             return 0;
         }
-        if (args.Length is < 3 or > 4 || args[0] is not ("preview" or "apply"))
+        if (args.Length is < 3 or > 4 || args[0] is not ("preview" or "apply" or "verify"))
         {
-            Console.Error.WriteLine("Usage: DocumentIntake <preview|apply> <source> <destination> [rules.json]");
+            Console.Error.WriteLine("Usage: DocumentIntake <preview|apply|verify> <source> <destination> [rules.json]");
             return 2;
         }
         try
         {
             var rules = args.Length == 4 ? Intake.ReadRules(args[3]) : Intake.DefaultRules();
-            var result = Intake.Run(args[1], args[2], args[0] == "apply", rules);
+            object result = args[0] == "verify"
+                ? Intake.Verify(args[1], args[2], rules)
+                : Intake.Run(args[1], args[2], args[0] == "apply", rules);
             Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
             return 0;
         }

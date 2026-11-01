@@ -85,6 +85,35 @@ var tests = new (string Name, Action<string> Run)[]
         var rules=Path.Combine(root,"rules.json");File.WriteAllText(rules,"{");
         Throws<System.Text.Json.JsonException>(()=>Intake.ReadRules(rules));
     }),
+    ("Verify matches copied files without changing them", root => {
+        var source = Input(root, "a/report.txt", "sample content");
+        Input(root, "b/report.txt", "second content");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        var first = Path.Combine(target, "documents", "a", "report.txt");
+        var before = File.GetLastWriteTimeUtc(first);
+        var result = Intake.Verify(source, target);
+        Check(result.Mode == "verify" && result.Checked == 2 && result.Matched == 2, "incorrect verification counts");
+        Check(File.GetLastWriteTimeUtc(first) == before, "verification modified a copy");
+    }),
+    ("Verify reports missing copied files", root => {
+        var source = Input(root, "a.txt", "original");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        File.Delete(Path.Combine(target, "documents", "a.txt"));
+        Throws<IOException>(() => Intake.Verify(source, target));
+    }),
+    ("Verify detects modified copies and changed sources", root => {
+        var source = Input(root, "a.txt", "original");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        var copy = Path.Combine(target, "documents", "a.txt");
+        File.WriteAllText(copy, "tampered");
+        Throws<IOException>(() => Intake.Verify(source, target));
+        File.WriteAllText(copy, "original");
+        File.WriteAllText(Path.Combine(source, "a.txt"), "new source");
+        Throws<IOException>(() => Intake.Verify(source, target));
+    }),
     ("Directory symlink rejected", root => {
         var source=Input(root,"a.txt","a");var outside=Path.Combine(root,"outside");Directory.CreateDirectory(outside);
         Directory.CreateSymbolicLink(Path.Combine(source,"linked"),outside);
