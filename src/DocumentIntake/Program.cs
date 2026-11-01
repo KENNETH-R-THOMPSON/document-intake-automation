@@ -112,7 +112,7 @@ public static class Intake
         return planned;
     }
 
-    public static VerificationResult Verify(string source, string destination, Dictionary<string, string>? rules = null)
+    public static VerificationResult Verify(string source, string destination, Dictionary<string, string>? rules = null, bool exact = false)
     {
         // Compare copies with the current source files. No files are created or changed.
         var plan = Plan(source, destination, rules, allowExistingCopies: true);
@@ -125,7 +125,17 @@ public static class Intake
             if (new FileInfo(item.Destination).Length != item.Bytes || Hash(item.Destination) != item.Sha256)
                 throw new IOException("Copied file differs from source: " + item.Destination);
         }
-        return new VerificationResult("verify", plan.Count, plan.Count);
+        if (exact)
+        {
+            // A normal verify checks expected copies. Exact mode also rejects stale or unrelated files.
+            if (!Directory.Exists(destination))
+                throw new DirectoryNotFoundException("Destination folder does not exist.");
+            var expected = plan.Select(item => item.Destination).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in Scan(destination))
+                if (!expected.Contains(file))
+                    throw new IOException("Unexpected destination file: " + file);
+        }
+        return new VerificationResult(exact ? "verify-exact" : "verify", plan.Count, plan.Count);
     }
 
     public static IntakeResult Run(string source, string destination, bool apply, Dictionary<string, string>? rules = null)
@@ -166,20 +176,21 @@ public static class Program
     {
         if (args.Length == 1 && args[0] is "--help" or "-h")
         {
-            Console.WriteLine("DocumentIntake <preview|apply|verify> <source> <destination> [rules.json]");
+            Console.WriteLine("DocumentIntake <preview|apply|verify|verify-exact> <source> <destination> [rules.json]");
             Console.WriteLine("Preview makes no changes. Apply copies files and never deletes originals or overwrites targets.");
+            Console.WriteLine("Verify-exact also rejects unexpected destination files. Both verify modes are read-only.");
             return 0;
         }
-        if (args.Length is < 3 or > 4 || args[0] is not ("preview" or "apply" or "verify"))
+        if (args.Length is < 3 or > 4 || args[0] is not ("preview" or "apply" or "verify" or "verify-exact"))
         {
-            Console.Error.WriteLine("Usage: DocumentIntake <preview|apply|verify> <source> <destination> [rules.json]");
+            Console.Error.WriteLine("Usage: DocumentIntake <preview|apply|verify|verify-exact> <source> <destination> [rules.json]");
             return 2;
         }
         try
         {
             var rules = args.Length == 4 ? Intake.ReadRules(args[3]) : Intake.DefaultRules();
-            object result = args[0] == "verify"
-                ? Intake.Verify(args[1], args[2], rules)
+            object result = args[0] is "verify" or "verify-exact"
+                ? Intake.Verify(args[1], args[2], rules, exact: args[0] == "verify-exact")
                 : Intake.Run(args[1], args[2], args[0] == "apply", rules);
             Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
             return 0;
