@@ -1,5 +1,13 @@
 # Validation
 
+## November 1, 2026: Exact destination verification
+
+[Pull request #6](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/pull/6) added opt-in `verify-exact`. It checks current source/copy hashes and rejects unexpected destination files, including nested extras, without deleting or changing files. The original `verify` behavior remains available. Three new tests cover clean copies, extra files, and an absent destination for empty input. The mode does not inspect empty extra directories or establish historical backup integrity.
+
+[PR GitHub Actions run 41351914187](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/actions/runs/41351914187) passed the .NET 10 Release build, all **25/25 executable tests**, and fictional preview, apply and exact-verify CLI steps on each hosted Ubuntu, macOS and Windows runner. The exact-verify sample reported two checked and two matched files on each operating system. The 22-test result below is historical. Merge commit: `14d968b56791728412dd623c9f650ad1faa001b6`.
+
+The owner's Mac, NAS, real documents, hostile filesystem races and historical snapshot verification remain untested. The PR run is verified; merged-main CI for this change has not been independently inspected.
+
 ## November 1, 2026: Read-only verification of existing copies
 
 [Pull request #4](https://github.com/KENNETH-R-THOMPSON/document-intake-automation/pull/4) added a `verify` command that compares previously copied destination files against the current source files by length and SHA-256. Three new regression checks cover matching copies, missing copies, and changed source or destination content. It doesn't modify files or check for extra destination files.

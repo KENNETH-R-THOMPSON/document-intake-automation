@@ -8,7 +8,7 @@ This is an independent personal portfolio project. It does not modify the ITAM t
 
 ## Requirements
 
-.NET 10 SDK. No third-party NuGet packages are required. Earlier testing used macOS ARM64. On October 31, 2026, GitHub Actions passed the Release build, all 19 tests, and the sample preview on hosted Ubuntu, Windows, and macOS runners. The current version has not been retested on my own Mac.
+.NET 10 SDK. No third-party NuGet packages are required. Earlier testing used macOS ARM64. On November 1, 2026, GitHub Actions passed the Release build, all 25 tests, and the fictional preview, apply and exact-verify commands on hosted Ubuntu, Windows and macOS runners. The current version has not been retested on my own Mac.
 
 ## Quick start
 
@@ -41,7 +41,7 @@ dotnet build src/DocumentIntake -c Release
 dotnet run --project tests/DocumentIntake.Tests -c Release
 ```
 
-The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, duplicate or invalid JSON rules, missing input, symbolic links, and verification of copied files.
+The test project is a small executable test runner. Use `dotnet run`, not `dotnet test`. It exits nonzero on failure and covers preview side effects, content preservation, classification, nested paths, conflicts, duplicate or invalid JSON rules, missing input, symbolic links, verification of copied files, and exact verification of unexpected destination files.
 
 ## JetBrains use
 
