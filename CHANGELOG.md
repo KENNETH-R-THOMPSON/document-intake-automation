@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-01
+
+Extended read-only `verify-exact` to report unexpected empty destination folders as well as extra files. Added two synthetic regression tests. Normal `verify` still checks only expected copies. The checker doesn't remove unexpected entries.
+
 ## 2026-10-31
 
 Changed custom rule parsing to reject repeated JSON extension keys and non-string category values. Added three regression cases for duplicate keys, invalid category types, and a non-object root. This prevents a later JSON property from silently replacing an earlier rule.
