@@ -116,6 +116,7 @@ public static class Intake
     public static VerificationResult Verify(string source, string destination, Dictionary<string, string>? rules = null, bool exact = false)
     {
         // Compare copies with the current source files. No files are created or changed.
+        destination = Path.TrimEndingDirectorySeparator(Path.GetFullPath(destination));
         var plan = Plan(source, destination, rules, allowExistingCopies: true);
         foreach (var item in plan)
         {
