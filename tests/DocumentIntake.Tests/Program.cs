@@ -125,6 +125,24 @@ var tests = new (string Name, Action<string> Run)[]
         Throws<IOException>(() => Intake.Verify(source, target, exact: true));
         Check(File.ReadAllText(extra) == "unrelated", "exact verify changed extra file");
     }),
+    ("Exact verify rejects unexpected empty directories", root => {
+        var source = Input(root, "a.txt", "original");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        var empty = Path.Combine(target, "other", "unused");
+        Directory.CreateDirectory(empty);
+        Check(Intake.Verify(source, target).Matched == 1, "ordinary verify changed behavior");
+        Throws<IOException>(() => Intake.Verify(source, target, exact: true));
+        Check(Directory.Exists(empty), "exact verify changed an empty directory");
+    }),
+    ("Exact verify checks directories with empty input", root => {
+        var source = Path.Combine(root, "input");
+        var target = Path.Combine(root, "output");
+        Directory.CreateDirectory(source);
+        Directory.CreateDirectory(Path.Combine(target, "stale"));
+        Throws<IOException>(() => Intake.Verify(source, target, exact: true));
+        Check(Directory.Exists(Path.Combine(target, "stale")), "exact verify changed destination");
+    }),
     ("Exact verify accepts clean copies", root => {
         var source = Input(root, "a/report.txt", "first");
         Input(root, "b/report.txt", "second");
