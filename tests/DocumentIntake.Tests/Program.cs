@@ -114,6 +114,33 @@ var tests = new (string Name, Action<string> Run)[]
         File.WriteAllText(Path.Combine(source, "a.txt"), "new source");
         Throws<IOException>(() => Intake.Verify(source, target));
     }),
+    ("Exact verify rejects extra destination files without changing them", root => {
+        var source = Input(root, "a.txt", "original");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        var extra = Path.Combine(target, "other", "nested", "stale.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(extra)!);
+        File.WriteAllText(extra, "unrelated");
+        Check(Intake.Verify(source, target).Matched == 1, "ordinary verify changed behavior");
+        Throws<IOException>(() => Intake.Verify(source, target, exact: true));
+        Check(File.ReadAllText(extra) == "unrelated", "exact verify changed extra file");
+    }),
+    ("Exact verify accepts clean copies", root => {
+        var source = Input(root, "a/report.txt", "first");
+        Input(root, "b/report.txt", "second");
+        var target = Path.Combine(root, "output");
+        Intake.Run(source, target, true);
+        var copy = Path.Combine(target, "documents", "a", "report.txt");
+        var before = File.GetLastWriteTimeUtc(copy);
+        var result = Intake.Verify(source, target, exact: true);
+        Check(result.Mode == "verify-exact" && result.Checked == 2 && result.Matched == 2, "wrong exact counts");
+        Check(File.GetLastWriteTimeUtc(copy) == before, "exact verify changed copy");
+    }),
+    ("Exact verify requires a destination for empty input", root => {
+        var source = Path.Combine(root, "input");
+        Directory.CreateDirectory(source);
+        Throws<DirectoryNotFoundException>(() => Intake.Verify(source, Path.Combine(root, "missing"), exact: true));
+    }),
     ("Directory symlink rejected", root => {
         var source=Input(root,"a.txt","a");var outside=Path.Combine(root,"outside");Directory.CreateDirectory(outside);
         Directory.CreateSymbolicLink(Path.Combine(source,"linked"),outside);
